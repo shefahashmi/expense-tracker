@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 192 192">
+  <rect width="192" height="192" rx="42" fill="#f97316"/>
+  <!-- Ledger book icon: open book / two pages -->
+  <rect x="44" y="52" width="46" height="88" rx="6" fill="rgba(0,0,0,0.25)"/>
+  <rect x="46" y="50" width="46" height="88" rx="6" fill="white"/>
+  <rect x="96" y="52" width="46" height="88" rx="6" fill="rgba(255,255,255,0.85)"/>
+  <rect x="93" y="50" width="6" height="90" rx="3" fill="#f97316"/>
+  <!-- Lines on left page -->
+  <rect x="54" y="68" width="30" height="3" rx="1.5" fill="#f97316" opacity="0.6"/>
+  <rect x="54" y="78" width="24" height="3" rx="1.5" fill="#f97316" opacity="0.4"/>
+  <rect x="54" y="88" width="28" height="3" rx="1.5" fill="#f97316" opacity="0.4"/>
+  <rect x="54" y="98" width="22" height="3" rx="1.5" fill="#f97316" opacity="0.4"/>
+  <rect x="54" y="108" width="26" height="3" rx="1.5" fill="#f97316" opacity="0.4"/>
+  <!-- Lines on right page -->
+  <rect x="102" y="68" width="30" height="3" rx="1.5" fill="#f97316" opacity="0.5"/>
+  <rect x="102" y="78" width="24" height="3" rx="1.5" fill="#f97316" opacity="0.35"/>
+  <rect x="102" y="88" width="28" height="3" rx="1.5" fill="#f97316" opacity="0.35"/>
+  <rect x="102" y="98" width="22" height="3" rx="1.5" fill="#f97316" opacity="0.35"/>
+  <rect x="102" y="108" width="26" height="3" rx="1.5" fill="#f97316" opacity="0.35"/>
+</svg>

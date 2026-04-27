@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Ledger"/>
+<meta name="theme-color" content="#f97316" id="theme-color-meta"/>
+<link rel="apple-touch-icon" href="icon-192.svg"/>
+<link rel="icon" href="icon-192.svg"/>
+<link rel="manifest" href="manifest.json"/>
+<title>Ledger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+<div class="layout">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sb-brand">
+    <div><div class="sb-logo">💰 Ledger</div><div class="sb-sub">Expense Tracker</div></div>
+    <button class="theme-btn" id="sd-theme">🌙</button>
+  </div>
+  <div class="sb-month">
+    <div class="sb-ml">Viewing Month</div>
+    <div class="mnav">
+      <button class="nav-arr" id="sd-prev">‹</button>
+      <div class="mdisplay" id="sd-month">—</div>
+      <button class="nav-arr" id="sd-next">›</button>
+    </div>
+    <div class="sb-total"><div class="sb-total-lbl">Total Spent</div><div class="sb-total-val" id="sd-total">0</div></div>
+  </div>
+  <nav class="sb-nav">
+    <button class="sb-item active" data-screen="overview"><span class="sb-item-icon">📊</span><span class="sb-item-lbl">Overview</span></button>
+    <button class="sb-item" data-screen="log"><span class="sb-item-icon">📋</span><span class="sb-item-lbl">Expense Log</span></button>
+    <button class="sb-item" data-screen="budget"><span class="sb-item-icon">🎯</span><span class="sb-item-lbl">Budgets & Subs</span></button>
+    <button class="sb-item" data-screen="loans"><span class="sb-item-icon">🤝</span><span class="sb-item-lbl">Loans</span></button>
+    <button class="sb-item" data-screen="settings"><span class="sb-item-icon">⚙️</span><span class="sb-item-lbl">Settings</span></button>
+  </nav>
+  <div class="sb-footer"><button class="sb-add" id="sd-add">＋ Add</button></div>
+</aside>
+
+<div class="main">
+  <header class="mobile-header">
+    <div class="mh-top">
+      <div class="mh-left">
+        <div class="mh-logo">💰</div>
+        <div class="mh-mnav">
+          <button class="nav-arr" id="mh-prev" style="width:24px;height:24px;font-size:12px">‹</button>
+          <div class="mh-month" id="mh-month">—</div>
+          <button class="nav-arr" id="mh-next" style="width:24px;height:24px;font-size:12px">›</button>
+        </div>
+      </div>
+      <div class="mh-right">
+        <div class="mh-total" id="mh-total">0</div>
+        <button class="theme-btn" id="mh-theme">🌙</button>
+      </div>
+    </div>
+    <div class="mh-tabs">
+      <button class="mh-tab active" data-screen="overview">Overview</button>
+      <button class="mh-tab" data-screen="log">Log</button>
+      <button class="mh-tab" data-screen="budget">Budgets</button>
+      <button class="mh-tab" data-screen="loans">Loans</button>
+      <button class="mh-tab" data-screen="settings">Settings</button>
+    </div>
+  </header>
+
+  <div class="content-area">
+
+    <!-- OVERVIEW -->
+    <div class="screen active" id="screen-overview">
+      <div class="ios-hint" id="ios-hint">
+        <div class="ios-hint-text"><strong>📲 Save as App</strong>Safari → Share → "Add to Home Screen"</div>
+        <button class="ios-hint-close" id="ios-close">✕</button>
+      </div>
+      <!-- Desktop stat bar (hidden on mobile) -->
+      <div class="ov-stat-bar" id="ov-stat-bar"></div>
+      <!-- Desktop at-a-glance narrative (hidden on mobile) -->
+      <div class="ov-glance" id="ov-glance" style="display:none"></div>
+      <div class="ov-grid">
+        <div class="ov-col">
+          <div class="kpi-grid" id="kpi-grid"></div>
+          <div class="card"><div class="card-title">This Week vs Last Week</div><div class="week-grid" id="week-grid"></div></div>
+          <div class="card"><div class="card-title">Category Breakdown</div><div id="cat-list"></div></div>
+        </div>
+        <div class="ov-col">
+          <div class="card"><div class="card-title">Spend by Category</div><div class="chart-wrap"><canvas id="pie-chart"></canvas></div></div>
+          <div class="card"><div class="card-title">Daily Spend</div><div class="chart-wrap"><canvas id="bar-chart"></canvas></div></div>
+          <div id="ov-loan-summary"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOG -->
+    <div class="screen" id="screen-log">
+      <div class="log-top">
+        <div class="search-wrap">
+          <span class="search-icon">🔍</span>
+          <input type="search" class="search-input" id="search-input" placeholder="Search all expenses…"/>
+          <button class="search-clear" id="search-clear">✕</button>
+        </div>
+      </div>
+      <div id="quick-add-row"></div>
+      <div class="filter-strip" id="filter-strip"></div>
+      <div id="log-list"></div>
+    </div>
+
+    <!-- BUDGETS & SUBS & MONTHS -->
+    <div class="screen" id="screen-budget">
+      <div class="inner-tabs">
+        <button class="inner-tab active" data-pane="pane-budgets">🎯 Budgets</button>
+        <button class="inner-tab" data-pane="pane-subs">💳 Subscriptions</button>
+        <button class="inner-tab" data-pane="pane-months">📅 Months</button>
+      </div>
+      <!-- Budgets pane -->
+      <div class="inner-pane active" id="pane-budgets">
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-title-row"><span class="card-title" style="margin-bottom:0">Monthly Budgets</span><button class="budget-set-btn" id="reset-budgets-btn">Reset All</button></div>
+          <div id="budget-list"></div>
+        </div>
+        <div class="card"><div class="card-title">Budget vs Actual</div><div class="chart-wrap"><canvas id="budget-chart"></canvas></div></div>
+      </div>
+      <!-- Subscriptions pane -->
+      <div class="inner-pane" id="pane-subs">
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-title">Add Subscription</div>
+          <div class="subs-add-grid">
+            <div class="fg"><label class="flbl">Name</label><input type="text" id="subs-name" class="finput" placeholder="e.g. Netflix…" style="font-size:14px;padding:11px 13px"/></div>
+            <div class="fg"><label class="flbl" id="subs-amt-lbl">Amount</label><input type="number" id="subs-amt" class="finput" placeholder="0" inputmode="decimal" style="font-size:14px;padding:11px 13px"/></div>
+          </div>
+          <div class="subs-add-grid2">
+            <div class="fg"><label class="flbl">Billing Cycle</label>
+              <select id="subs-cycle" class="finput" style="font-size:13px;padding:10px 13px">
+                <option value="monthly">Monthly</option>
+                <option value="quarterly">Every 3 Months</option>
+                <option value="halfyearly">Every 6 Months</option>
+                <option value="yearly">Yearly</option>
+              </select>
+            </div>
+            <div class="fg"><label class="flbl">Next Billing Date</label><input type="date" id="subs-next-billing" class="finput" style="font-size:13px;padding:10px 13px"/></div>
+            <div class="fg"><label class="flbl">Start Date (optional)</label><input type="date" id="subs-start" class="finput" style="font-size:13px;padding:10px 13px"/></div>
+          </div>
+          <button class="subs-add-btn" id="subs-add-btn">＋ Add Subscription</button>
+          <div id="subs-upcoming" style="margin-top:14px"></div>
+          <div id="subs-list" style="margin-top:4px"></div>
+        </div>
+        <div class="card">
+          <div class="card-title-row">
+            <span class="card-title" style="margin-bottom:0">Cost Summary</span>
+            <select id="subs-period-select" class="finput" style="width:auto;font-size:11px;padding:5px 28px 5px 10px">
+              <option value="monthly">Monthly</option>
+              <option value="quarterly">3 Months</option>
+              <option value="halfyearly">6 Months</option>
+              <option value="yearly">Yearly</option>
+            </select>
+          </div>
+          <div style="margin-top:14px">
+            <div class="subs-kpi-grid" id="subs-kpi"></div>
+            <div id="subs-breakdown"></div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:14px">
+          <div class="card-title">Actual Subscription Spend</div>
+          <div class="chart-wrap"><canvas id="subs-chart"></canvas></div>
+        </div>
+      </div>
+      <!-- Months pane -->
+      <div class="inner-pane" id="pane-months">
+        <div class="card" style="margin-bottom:14px"><div class="card-title">Monthly Trend</div><div class="chart-wrap"><canvas id="month-chart"></canvas></div></div>
+        <div class="card" id="month-list"></div>
+      </div>
+    </div>
+
+    <!-- LOANS -->
+    <div class="screen" id="screen-loans">
+      <div id="loan-net-area"></div>
+      <div class="loans-kpi-grid" id="loans-kpi" style="display:none"></div>
+      <div class="inner-tabs">
+        <button class="inner-tab active" data-loan-tab="all">All</button>
+        <button class="inner-tab" data-loan-tab="lent">Lent</button>
+        <button class="inner-tab" data-loan-tab="borrowed">Borrowed</button>
+        <button class="inner-tab" data-loan-tab="settled">Settled</button>
+      </div>
+      <div id="loans-list"></div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="screen" id="screen-settings">
+                  <div class="settings-section">
+        <div class="settings-section-title">Backup &amp; Restore</div>
+        <div class="settings-row" id="export-btn"><div class="settings-row-left"><span class="settings-row-icon">⬇️</span><div><div class="settings-row-label">Export</div><div class="settings-row-sub">Download your data as JSON or CSV</div></div></div><span class="settings-row-arrow">›</span></div>
+        <div class="settings-row" id="import-btn"><div class="settings-row-left"><span class="settings-row-icon">⬆️</span><div><div class="settings-row-label">Import</div><div class="settings-row-sub">Restore from a JSON backup file</div></div></div><span class="settings-row-arrow">›</span></div>
+        <input type="file" id="json-file-input" accept=".json" style="display:none"/>
+        <div id="backup-msg"></div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-section-title">Import</div>
+        <div class="settings-row" id="open-text-import-btn"><div class="settings-row-left"><span class="settings-row-icon">📋</span><div><div class="settings-row-label">Import from Text</div><div class="settings-row-sub">Paste your monthly expense log</div></div></div><span class="settings-row-arrow">›</span></div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-section-title">Appearance</div>
+        <div class="settings-row" id="theme-toggle-row"><div class="settings-row-left"><span class="settings-row-icon" id="settings-theme-icon">🌙</span><div><div class="settings-row-label">Theme</div><div class="settings-row-sub" id="settings-theme-sub">Dark mode</div></div></div><span class="settings-row-arrow">›</span></div>
+        <div class="settings-row" style="cursor:default;flex-wrap:wrap;gap:10px">
+          <div class="settings-row-left"><span class="settings-row-icon">💱</span><div><div class="settings-row-label">Currency</div><div class="settings-row-sub" id="currency-sub">Indian Rupee (₹)</div></div></div>
+          <select id="currency-select" class="finput" style="width:auto;font-size:12px;padding:6px 28px 6px 10px">
+            <option value="AUD|A$">Australian Dollar (A$)</option>
+            <option value="BRL|R$">Brazilian Real (R$)</option>
+            <option value="CAD|C$">Canadian Dollar (C$)</option>
+            <option value="CHF|CHF">Swiss Franc (CHF)</option>
+            <option value="CNY|¥">Chinese Yuan (¥)</option>
+            <option value="EUR|€">Euro (€)</option>
+            <option value="GBP|£">British Pound (£)</option>
+            <option value="HKD|HK$">Hong Kong Dollar (HK$)</option>
+            <option value="INR|₹" selected>Indian Rupee (₹)</option>
+            <option value="JPY|¥">Japanese Yen (¥)</option>
+            <option value="KRW|₩">South Korean Won (₩)</option>
+            <option value="MXN|MX$">Mexican Peso (MX$)</option>
+            <option value="MYR|RM">Malaysian Ringgit (RM)</option>
+            <option value="NGN|₦">Nigerian Naira (₦)</option>
+            <option value="NOK|kr">Norwegian Krone (kr)</option>
+            <option value="NZD|NZ$">New Zealand Dollar (NZ$)</option>
+            <option value="PHP|₱">Philippine Peso (₱)</option>
+            <option value="PKR|Rs">Pakistani Rupee (Rs)</option>
+            <option value="SAR|SAR">Saudi Riyal (SAR)</option>
+            <option value="SEK|kr">Swedish Krona (kr)</option>
+            <option value="SGD|S$">Singapore Dollar (S$)</option>
+            <option value="THB|฿">Thai Baht (฿)</option>
+            <option value="TRY|₺">Turkish Lira (₺)</option>
+            <option value="USD|$">US Dollar ($)</option>
+            <option value="ZAR|R">South African Rand (R)</option>
+            <option value="OTHER|">Other…</option>
+          </select>
+        </div>
+        <div id="currency-custom-row" style="display:none;padding:8px 4px 4px">
+          <div class="fg"><label class="flbl">Currency Code (e.g. AED)</label><input type="text" id="currency-custom-input" class="finput" maxlength="5" placeholder="e.g. AED" style="text-transform:uppercase"/></div>
+          <button class="pri-btn" id="currency-custom-save" style="margin-top:8px">Apply</button>
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-section-title">Danger Zone</div>
+        <div class="settings-row" id="clear-all-btn" style="border-color:rgba(244,63,94,.25)"><div class="settings-row-left"><span class="settings-row-icon">🗑️</span><div><div class="settings-row-label" style="color:var(--danger)">Clear All Data</div><div class="settings-row-sub">Delete every expense permanently</div></div></div><span class="settings-row-arrow" style="color:var(--danger)">›</span></div>
+      </div>
+    </div>
+
+    <!-- TEXT IMPORT -->
+    <div class="screen" id="screen-import">
+      <div class="card">
+        <div class="card-title-row"><span class="card-title" style="margin-bottom:0">Import from Text</span><button class="budget-set-btn" id="back-to-settings" style="color:var(--text3)">← Back</button></div>
+        <div class="import-hint" style="margin-top:14px">
+          <div class="import-hint-title">📋 Format</div>
+          <div class="import-hint-text"><span>1/4/2026 - Wednesday</span><br/><span>25.00/- Parking</span><br/><span>300/- Metro Recharge</span><br/><br/>✓ Month auto-detected &nbsp;✓ Categories auto-assigned</div>
+        </div>
+        <textarea class="import-area" id="import-ta" placeholder="Paste your monthly expense log here…"></textarea>
+        <div id="import-msg"></div>
+        <div class="btn-row"><button class="sec-btn" id="import-clear">Clear</button><button class="pri-btn" id="import-run">Import Expenses</button></div>
+      </div>
+    </div>
+
+  </div><!-- /content-area -->
+</div><!-- /main -->
+</div><!-- /layout -->
+
+<!-- Bottom Nav -->
+<div class="bottom-nav">
+  <button class="bn-item active" data-screen="overview"><span class="bn-icon">📊</span><span class="bn-lbl">Overview</span></button>
+  <button class="bn-item" data-screen="log"><span class="bn-icon">📋</span><span class="bn-lbl">Log</span></button>
+  <button class="bn-item" data-screen="budget"><span class="bn-icon">🎯</span><span class="bn-lbl">Budgets</span></button>
+  <button class="bn-item" data-screen="loans"><span class="bn-icon">🤝</span><span class="bn-lbl">Loans</span></button>
+  <button class="bn-item" data-screen="settings"><span class="bn-icon">⚙️</span><span class="bn-lbl">Settings</span></button>
+</div>
+
+<!-- FAB -->
+<button class="fab" id="fab">＋</button>
+<div class="fab-sheet-overlay" id="fab-sheet-overlay"></div>
+<div class="fab-sheet" id="fab-sheet">
+  <div class="fab-sheet-title">What would you like to add?</div>
+  <button class="fab-option" id="fab-add-expense"><span class="fab-option-icon">💸</span><div><div class="fab-option-label">Add Expense</div><div class="fab-option-sub">Log a new expense entry</div></div></button>
+  <button class="fab-option" id="fab-add-loan"><span class="fab-option-icon">🤝</span><div><div class="fab-option-label">Add Loan</div><div class="fab-option-sub">Track money lent or borrowed</div></div></button>
+</div>
+
+<!-- ADD EXPENSE MODAL -->
+<div class="overlay" id="add-expense-overlay">
+  <div class="modal">
+    <div class="modal-title">💸 New Expense</div>
+    <div class="modal-sub">Add to your expense log.</div>
+    <div class="form-grid">
+      <div class="fg"><label class="flbl">Date</label><input type="date" id="add-date" class="finput"/><div class="field-err" id="add-date-err"></div><div class="field-warn" id="add-date-warn"></div></div>
+      <div class="fg"><label class="flbl" id="add-amt-lbl">Amount</label><input type="number" id="add-amt" class="finput" placeholder="0.00" inputmode="decimal" step="0.01"/><div class="field-err" id="add-amt-err"></div></div>
+      <div class="fg form-full"><label class="flbl">Description</label><input type="text" id="add-desc" class="finput" placeholder="e.g. Parking, Pizza, Metro…"/><div class="field-err" id="add-desc-err"></div></div>
+      <div class="fg form-full"><label class="flbl">Category</label><select id="add-cat" class="finput"></select></div>
+    </div>
+    <div class="btn-row" style="margin-top:8px"><button class="sec-btn" id="add-expense-cancel">Cancel</button><button class="pri-btn" id="add-save">Save Expense</button></div>
+  </div>
+</div>
+
+<!-- EDIT EXPENSE MODAL -->
+<div class="overlay" id="edit-overlay">
+  <div class="modal">
+    <div class="modal-title">Edit Expense</div><div class="modal-sub">Changes save instantly.</div>
+    <div class="form-grid">
+      <div class="fg"><label class="flbl">Date</label><input type="date" id="edit-date" class="finput"/><div class="field-err" id="edit-date-err"></div><div class="field-warn" id="edit-date-warn"></div></div>
+      <div class="fg"><label class="flbl" id="edit-amt-lbl">Amount</label><input type="number" id="edit-amt" class="finput" inputmode="decimal" step="0.01"/><div class="field-err" id="edit-amt-err"></div></div>
+      <div class="fg form-full"><label class="flbl">Description</label><input type="text" id="edit-desc" class="finput"/><div class="field-err" id="edit-desc-err"></div></div>
+      <div class="fg form-full"><label class="flbl">Category</label><select id="edit-cat" class="finput"></select></div>
+    </div>
+    <div class="btn-row" style="margin-top:16px"><button class="sec-btn" id="edit-cancel">Cancel</button><button class="pri-btn" id="edit-save">Save Changes</button></div>
+  </div>
+</div>
+
+<!-- DELETE MODAL (unified) -->
+<div class="overlay" id="del-overlay" style="z-index:400">
+  <div class="modal">
+    <div class="modal-title" id="del-title">Delete?</div>
+    <div class="modal-sub" id="del-sub">This will be undoable for 5 seconds.</div>
+    <div class="btn-row"><button class="sec-btn" id="del-cancel">Cancel</button><button class="pri-btn danger-btn" id="del-confirm">Delete</button></div>
+  </div>
+</div>
+
+<!-- BUDGET MODAL -->
+<div class="overlay" id="budget-overlay">
+  <div class="modal"><div class="modal-title" id="budget-modal-title">Set Budget</div><div class="modal-sub">Monthly limit. Set 0 to remove.</div>
+    <div class="fg" style="margin-bottom:16px"><label class="flbl" id="budget-input-lbl">Monthly Budget</label><input type="number" id="budget-input" class="finput" placeholder="e.g. 3000" inputmode="decimal"/></div>
+    <div class="btn-row"><button class="sec-btn" id="budget-cancel">Cancel</button><button class="pri-btn" id="budget-save">Set Budget</button></div>
+  </div>
+</div>
+
+<!-- EDIT SUBSCRIPTION MODAL -->
+<div class="overlay" id="subs-edit-overlay">
+  <div class="modal">
+    <div class="modal-title">Edit Subscription</div><div class="modal-sub">Update subscription details.</div>
+    <div class="form-grid">
+      <div class="fg form-full"><label class="flbl">Name</label><input type="text" id="se-name" class="finput"/></div>
+      <div class="fg"><label class="flbl" id="se-amt-lbl">Amount</label><input type="number" id="se-amt" class="finput" inputmode="decimal"/></div>
+      <div class="fg"><label class="flbl">Billing Cycle</label>
+        <select id="se-cycle" class="finput">
+          <option value="monthly">Monthly</option>
+          <option value="quarterly">Every 3 Months</option>
+          <option value="halfyearly">Every 6 Months</option>
+          <option value="yearly">Yearly</option>
+        </select>
+      </div>
+      <div class="fg"><label class="flbl">Next Billing Date</label><input type="date" id="se-next-billing" class="finput"/></div>
+      <div class="fg"><label class="flbl">Start Date (optional)</label><input type="date" id="se-start" class="finput"/></div>
+      <div class="fg"><label class="flbl">Status</label>
+        <select id="se-status" class="finput">
+          <option value="active">Active</option>
+          <option value="paused">Paused</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+      </div>
+    </div>
+    <div style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 14px;margin-top:12px">
+      <div style="font-family:var(--mono);font-size:8px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;margin-bottom:4px">Next Billing Preview</div>
+      <div id="se-next-preview" style="font-family:var(--mono);font-size:13px;font-weight:600;color:var(--success)">—</div>
+    </div>
+    <div class="btn-row" style="margin-top:12px"><button class="sec-btn" id="se-cancel">Cancel</button><button class="pri-btn" id="se-save">Save</button></div>
+  </div>
+</div>
+
+<!-- MARK AS PAID MODAL -->
+<div class="overlay" id="subs-paid-overlay">
+  <div class="modal">
+    <div class="modal-title">💳 Mark as Paid</div>
+    <div class="modal-sub" id="subs-paid-sub">Recording payment.</div>
+    <div class="form-grid">
+      <div class="fg"><label class="flbl">Payment Date</label><input type="date" id="subs-paid-date" class="finput"/></div>
+      <div class="fg"><label class="flbl" id="subs-paid-amt-lbl">Amount</label><input type="number" id="subs-paid-amt" class="finput" inputmode="decimal" step="0.01"/></div>
+    </div>
+    <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:6px">Next billing will auto-advance after recording.</div>
+    <div class="btn-row" style="margin-top:12px"><button class="sec-btn" id="subs-paid-cancel">Cancel</button><button class="pri-btn" id="subs-paid-confirm" style="background:var(--success)">✓ Record Payment</button></div>
+  </div>
+</div>
+
+<!-- ADD LOAN MODAL -->
+<div class="overlay" id="add-loan-overlay">
+  <div class="modal">
+    <div class="modal-title">🤝 New Loan</div><div class="modal-sub">Track money lent or borrowed.</div>
+    <div class="form-grid">
+      <div class="fg form-full"><label class="flbl">Person's Name</label><input type="text" id="loan-person" class="finput" placeholder="e.g. Rahul, Priya…"/></div>
+      <div class="fg form-full"><label class="flbl">Type</label>
+        <select id="loan-type" class="finput">
+          <option value="lent">I Lent (they owe me)</option>
+          <option value="borrowed">I Borrowed (I owe them)</option>
+        </select>
+      </div>
+      <div class="fg"><label class="flbl" id="loan-amt-lbl">Amount</label><input type="number" id="loan-amount" class="finput" placeholder="0.00" inputmode="decimal" step="0.01"/></div>
+      <div class="fg"><label class="flbl">Date</label><input type="date" id="loan-date" class="finput"/></div>
+      <div class="fg form-full"><label class="flbl">Expected Return Date</label><input type="date" id="loan-due" class="finput"/></div>
+      <div class="fg form-full"><label class="flbl">Note (optional)</label><input type="text" id="loan-note" class="finput" placeholder="What is it for?"/></div>
+    </div>
+    <div class="btn-row" style="margin-top:16px"><button class="sec-btn" id="add-loan-cancel">Cancel</button><button class="pri-btn" id="add-loan-save">Add Loan</button></div>
+  </div>
+</div>
+
+<!-- RECORD LOAN PAYMENT MODAL -->
+<div class="overlay" id="loan-payment-overlay">
+  <div class="modal">
+    <div class="modal-title">💸 Record Payment</div>
+    <div class="modal-sub" id="loan-payment-sub">Recording payment.</div>
+    <div class="form-grid">
+      <div class="fg"><label class="flbl" id="lp-amt-lbl">Amount</label><input type="number" id="lp-amount" class="finput" placeholder="0.00" inputmode="decimal" step="0.01"/></div>
+      <div class="fg"><label class="flbl">Date</label><input type="date" id="lp-date" class="finput"/></div>
+      <div class="fg form-full"><label class="flbl">Note (optional)</label><input type="text" id="lp-note" class="finput" placeholder="e.g. UPI, cash…"/></div>
+    </div>
+    <div class="btn-row" style="margin-top:16px"><button class="sec-btn" id="lp-cancel">Cancel</button><button class="pri-btn" id="lp-save" style="background:var(--success)">Record Payment</button></div>
+  </div>
+</div>
+
+<!-- EDIT LOAN MODAL -->
+<div class="overlay" id="edit-loan-overlay">
+  <div class="modal">
+    <div class="modal-title">Edit Loan</div><div class="modal-sub">Update loan details.</div>
+    <div class="form-grid">
+      <div class="fg form-full"><label class="flbl">Person's Name</label><input type="text" id="el-person" class="finput"/></div>
+      <div class="fg"><label class="flbl" id="el-amt-lbl">Original Amount</label><input type="number" id="el-amount" class="finput" inputmode="decimal" step="0.01"/></div>
+      <div class="fg"><label class="flbl">Date</label><input type="date" id="el-date" class="finput"/></div>
+      <div class="fg form-full"><label class="flbl">Expected Return Date</label><input type="date" id="el-due" class="finput"/></div>
+      <div class="fg form-full"><label class="flbl">Note (optional)</label><input type="text" id="el-note" class="finput"/></div>
+    </div>
+    <div class="btn-row" style="margin-top:16px"><button class="sec-btn" id="el-cancel">Cancel</button><button class="pri-btn" id="el-save">Save Changes</button></div>
+  </div>
+</div>
+
+<!-- EDIT LOAN PAYMENT MODAL -->
+<div class="overlay" id="edit-loan-payment-overlay">
+  <div class="modal">
+    <div class="modal-title">Edit Payment</div><div class="modal-sub" id="ep-sub">Update payment record.</div>
+    <div class="form-grid">
+      <div class="fg"><label class="flbl" id="ep-amt-lbl">Amount</label><input type="number" id="ep-amount" class="finput" inputmode="decimal" step="0.01"/></div>
+      <div class="fg"><label class="flbl">Date</label><input type="date" id="ep-date" class="finput"/></div>
+      <div class="fg form-full"><label class="flbl">Note (optional)</label><input type="text" id="ep-note" class="finput"/></div>
+    </div>
+    <div class="btn-row" style="margin-top:16px">
+      <button class="sec-btn" id="ep-cancel">Cancel</button>
+      <button class="sec-btn" id="ep-delete" style="color:var(--danger);border-color:rgba(244,63,94,.3);flex:1">✕ Delete</button>
+      <button class="pri-btn" id="ep-save">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Export Sheet -->
+<div class="fab-sheet-overlay" id="export-sheet-overlay"></div>
+<div class="fab-sheet" id="export-sheet">
+  <div class="fab-sheet-title">Export Format</div>
+  <button class="fab-option" id="export-json-btn">
+    <span class="fab-option-icon">📦</span>
+    <div><div class="fab-option-label">Export JSON</div><div class="fab-option-sub">Full backup — all data, restorable</div></div>
+  </button>
+  <button class="fab-option" id="export-csv-btn">
+    <span class="fab-option-icon">📊</span>
+    <div><div class="fab-option-label">Export CSV</div><div class="fab-option-sub">Expenses + loans, open in Excel or Sheets</div></div>
+  </button>
+</div>
+
+<!-- Import Sheet -->
+<div class="fab-sheet-overlay" id="import-sheet-overlay"></div>
+<div class="fab-sheet" id="import-sheet">
+  <div class="fab-sheet-title">Restore from Backup</div>
+  <button class="fab-option" id="import-json-btn">
+    <span class="fab-option-icon">📦</span>
+    <div><div class="fab-option-label">Restore from JSON</div><div class="fab-option-sub">Load a previous full backup</div></div>
+  </button>
+
+</div>
+
+<!-- JSON CONFIRM MODAL -->
+<div class="overlay" id="json-confirm-overlay">
+  <div class="modal"><div class="modal-title">Restore from Backup</div><div class="modal-sub" id="json-confirm-sub">Choose how to import.</div>
+    <div class="choice-row">
+      <button class="choice-btn" id="json-merge-btn"><div style="font-size:20px;margin-bottom:4px">🔀</div>Merge<br/><span style="font-family:var(--mono);font-size:9px;color:var(--text3)">Add new, keep existing</span></button>
+      <button class="choice-btn danger" id="json-replace-btn"><div style="font-size:20px;margin-bottom:4px">🔄</div>Replace<br/><span style="font-family:var(--mono);font-size:9px;color:var(--text3)">Overwrite all data</span></button>
+    </div>
+    <div class="btn-row" style="margin-top:12px"><button class="sec-btn" id="json-cancel-btn">Cancel</button></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"><span id="toast-msg"></span><button class="toast-undo" id="toast-undo-btn" style="display:none">Undo</button></div>
+
+<script src="js/data.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/render.js"></script>
+<script src="js/import.js"></script>
+<script src="js/app.js"></script>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>
